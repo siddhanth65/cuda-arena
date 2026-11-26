@@ -10,7 +10,7 @@
 
 ## 1:45-3:00 - CUDA mapping
 
-"The main CUDA kernel is SimulateTournamentKernel. The host chooses a batch size and launches enough CUDA threads to cover every requested game. Each thread calculates its own game ID, owns a private nine-cell board, simulates that game, and writes two integers: the winner and the number of moves. Because games are independent, threads do not need to synchronize with one another or exchange board state. The GPU parallelism is across games, not within one board."
+"The main CUDA kernel is simulate_tournament_kernel. The host chooses a batch size and launches enough CUDA threads to cover every requested game. Each thread calculates its own game ID, owns a private nine-cell board, simulates that game, and writes two integers: the winner and the number of moves. Because games are independent, threads do not need to synchronize with one another or exchange board state. The GPU parallelism is across games, not within one board."
 
 ## 3:00-4:00 - Memory and execution
 
