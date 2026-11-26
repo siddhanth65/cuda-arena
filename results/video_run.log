@@ -1,0 +1,17 @@
+CUDA Arena: massively parallel Tic-Tac-Toe tournament
+GPU: NVIDIA GeForce RTX 3050 Laptop GPU
+Games per execution: 1048576
+Timing iterations: 5
+Base seed: 2026
+Execution model: one CUDA thread simulates one independent game
+
+========== TOURNAMENT RESULTS ==========
+Agent X wins: 339530
+Agent O wins: 0
+Draws: 709046
+Average moves per game: 8.3524
+CPU/GPU consistency: PASS (1048576 games checked)
+Average GPU kernel time: 1.5532 ms
+GPU throughput: 675.1055 million games/s
+CPU reference time: 691.9108 ms
+Timing note: GPU time is kernel-only; CPU time is host simulation.
