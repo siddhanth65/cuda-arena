@@ -21,7 +21,7 @@ The project demonstrates a parallel simulation workload and measurement workflow
 
 ## CUDA implementation
 
-The tournament kernel is \`SimulateTournamentKernel\` in \`src/cuda_tournament.cu\`.
+The tournament kernel is \`simulate_tournament_kernel\` in \`src/cuda_tournament.cu\`.
 
 1. The host allocates an output array for all game results.
 2. The kernel launches enough CUDA threads to cover the requested number of games.
