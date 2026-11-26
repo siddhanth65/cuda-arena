@@ -23,7 +23,7 @@ constexpr int kNoMove = -1;
     }                                                                        \
   } while (0)
 
-__device__ bool IsWinningMove(const int* board, int cell, int player) {
+__device__ bool is_winning_move(const int* board, int cell, int player) {
   const int lines[8][3] = {
       {0, 1, 2}, {3, 4, 5}, {6, 7, 8},
       {0, 3, 6}, {1, 4, 7}, {2, 5, 8},
@@ -42,7 +42,7 @@ __device__ bool IsWinningMove(const int* board, int cell, int player) {
   return false;
 }
 
-__global__ void EvaluateMoves(const int* board, int player, int strategy,
+__global__ void evaluate_moves(const int* board, int player, int strategy,
                               int* scores) {
   const int cell = blockIdx.x * blockDim.x + threadIdx.x;
   if (cell >= kBoardSize) return;
@@ -52,8 +52,8 @@ __global__ void EvaluateMoves(const int* board, int player, int strategy,
   }
   const int opponent = (player == kX) ? kO : kX;
   int score = 0;
-  if (IsWinningMove(board, cell, player)) score += 10000;
-  if (IsWinningMove(board, cell, opponent))
+  if (is_winning_move(board, cell, player)) score += 10000;
+  if (is_winning_move(board, cell, opponent))
     score += (strategy == 1) ? 9500 : 8000;
   if (cell == 4) score += (strategy == 0) ? 450 : 600;
   const bool corner = cell == 0 || cell == 2 || cell == 6 || cell == 8;
@@ -64,7 +64,7 @@ __global__ void EvaluateMoves(const int* board, int player, int strategy,
   scores[cell] = score;
 }
 
-void PrintBoard(const std::array<int, kBoardSize>& board) {
+void print_board(const std::array<int, kBoardSize>& board) {
   const char symbols[] = {'.', 'X', 'O'};
   std::cout << '\n';
   for (int row = 0; row < 3; ++row) {
@@ -79,7 +79,7 @@ void PrintBoard(const std::array<int, kBoardSize>& board) {
   std::cout << '\n';
 }
 
-bool HasWon(const std::array<int, kBoardSize>& board, int player) {
+bool has_won(const std::array<int, kBoardSize>& board, int player) {
   constexpr int lines[8][3] = {
       {0, 1, 2}, {3, 4, 5}, {6, 7, 8},
       {0, 3, 6}, {1, 4, 7}, {2, 5, 8},
@@ -90,7 +90,7 @@ bool HasWon(const std::array<int, kBoardSize>& board, int player) {
   return false;
 }
 
-int SelectMove(const std::array<int, kBoardSize>& board, int player,
+int select_move(const std::array<int, kBoardSize>& board, int player,
                int strategy, cudaStream_t stream) {
   int* d_board = nullptr;
   int* d_scores = nullptr;
@@ -99,7 +99,7 @@ int SelectMove(const std::array<int, kBoardSize>& board, int player,
   CUDA_CHECK(cudaMalloc(reinterpret_cast<void**>(&d_scores), sizeof(int) * kBoardSize));
   CUDA_CHECK(cudaMemcpyAsync(d_board, board.data(), sizeof(int) * kBoardSize,
                              cudaMemcpyHostToDevice, stream));
-  EvaluateMoves<<<1, 32, 0, stream>>>(d_board, player, strategy, d_scores);
+  evaluate_moves<<<1, 32, 0, stream>>>(d_board, player, strategy, d_scores);
   CUDA_CHECK(cudaGetLastError());
   CUDA_CHECK(cudaMemcpyAsync(scores.data(), d_scores, sizeof(int) * kBoardSize,
                              cudaMemcpyDeviceToHost, stream));
@@ -148,11 +148,11 @@ int main(int argc, char** argv) {
     std::array<int, kBoardSize> board{};
     int player = kX;
     std::cout << "\n========== GAME " << game << " ==========\n";
-    PrintBoard(board);
+    print_board(board);
     for (int turn = 0; turn < kBoardSize; ++turn) {
       const int strategy = player == kX ? 0 : 1;
       cudaStream_t stream = player == kX ? x_stream : o_stream;
-      const int move = SelectMove(board, player, strategy, stream);
+      const int move = select_move(board, player, strategy, stream);
       if (move == kNoMove || board[move] != kEmpty) {
         std::cerr << "Agent returned an invalid move.\n";
         CUDA_CHECK(cudaStreamDestroy(x_stream));
@@ -163,8 +163,8 @@ int main(int argc, char** argv) {
       std::cout << "Agent " << (player == kX ? 'X' : 'O')
                 << " selects cell " << move << " (row " << move / 3
                 << ", column " << move % 3 << ")\n";
-      PrintBoard(board);
-      if (HasWon(board, player)) {
+      print_board(board);
+      if (has_won(board, player)) {
         if (player == kX) ++x_wins; else ++o_wins;
         std::cout << "Winner: Agent " << (player == kX ? 'X' : 'O') << '\n';
         break;
