@@ -32,7 +32,7 @@
 
 - Show the repository and README.
 - Show the CUDA source and identify the one-thread-per-game kernel.
-- Build with \`make clean && make\`.
-- Run \`./scripts/run_demo.sh 1048576 5\` on the CUDA GPU.
+- Build with `make clean && make`.
+- Run `./scripts/run_demo.sh 1048576 5` on the CUDA GPU.
 - Show the terminal output and the generated CSV.
 - Only report numbers observed in the actual run.

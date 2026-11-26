@@ -1,0 +1,148 @@
+
+################ SESSION INFO ################
+Date (UTC): 2026-11-26 18:50:09
+Host kernel: Linux 6.18.58.1-microsoft-standard-WSL2 x86_64
+Thu Nov 26 18:50:09 2026       
++-----------------------------------------------------------------------------------------+
+| NVIDIA-SMI 620.70.03              KMD Version: 621.14        CUDA UMD Version: 13.5     |
++-----------------------------------------+------------------------+----------------------+
+| GPU  Name                 Persistence-M | Bus-Id          Disp.A | Volatile Uncorr. ECC |
+| Fan  Temp   Perf          Pwr:Usage/Cap |           Memory-Usage | GPU-Util  Compute M. |
+|                                         |                        |               MIG M. |
+|=========================================+========================+======================|
+|   0  NVIDIA GeForce RTX 3050 ...    On  |   00000000:01:00.0 Off |                  N/A |
+| N/A   54C    P8              6W /   60W |     270MiB /   4096MiB |      0%      Default |
+|                                         |                        |                  N/A |
++-----------------------------------------+------------------------+----------------------+
+
++-----------------------------------------------------------------------------------------+
+| Processes:                                                                              |
+|  GPU   GI   CI              PID   Type   Process name                        GPU Memory |
+|        ID   ID                                                               Usage      |
+|=========================================================================================|
+|  No running processes found                                                             |
++-----------------------------------------------------------------------------------------+
+nvcc: NVIDIA (R) Cuda compiler driver
+Copyright (c) 2005-2025 NVIDIA Corporation
+Built on Wed_Aug_20_01:58:59_PM_PDT_2025
+Cuda compilation tools, release 13.0, V13.0.88
+Build cuda_13.0.r13.0/compiler.36424714_0
+
+################ BUILD: make clean && make ################
+rm -f cuda_tournament cuda_arena_duel
+nvcc -O3 -std=c++17 -lineinfo src/cuda_tournament.cu -o cuda_tournament
+nvcc -O3 -std=c++17 -lineinfo src/cuda_arena.cu -o cuda_arena_duel
+build exit code: 0
+
+################ SMOKE TEST: 16384 games, 3 iterations ################
+CUDA Arena: massively parallel Tic-Tac-Toe tournament
+GPU: NVIDIA GeForce RTX 3050 Laptop GPU
+Games per execution: 16384
+Timing iterations: 3
+Base seed: 2026
+Execution model: one CUDA thread simulates one independent game
+
+========== TOURNAMENT RESULTS ==========
+Agent X wins: 5339
+Agent O wins: 0
+Draws: 11045
+Average moves per game: 8.3483
+CPU/GPU consistency: PASS (16384 games checked)
+Average GPU kernel time: 0.0433 ms
+GPU throughput: 378.6048 million games/s
+CPU reference time: 8.2441 ms
+Timing note: GPU time is kernel-only; CPU time is host simulation.
+Per-game results written to: results/smoke.csv
+smoke exit code: 0
+
+################ MAIN BENCHMARK: ./scripts/run_demo.sh 1048576 5 ################
+rm -f cuda_tournament cuda_arena_duel
+nvcc -O3 -std=c++17 -lineinfo src/cuda_tournament.cu -o cuda_tournament
+nvcc -O3 -std=c++17 -lineinfo src/cuda_arena.cu -o cuda_arena_duel
+Running CUDA Arena tournament: games=1048576, iterations=5
+CUDA Arena: massively parallel Tic-Tac-Toe tournament
+GPU: NVIDIA GeForce RTX 3050 Laptop GPU
+Games per execution: 1048576
+Timing iterations: 5
+Base seed: 2026
+Execution model: one CUDA thread simulates one independent game
+
+========== TOURNAMENT RESULTS ==========
+Agent X wins: 339530
+Agent O wins: 0
+Draws: 709046
+Average moves per game: 8.3524
+CPU/GPU consistency: PASS (1048576 games checked)
+Average GPU kernel time: 1.5826 ms
+GPU throughput: 662.5660 million games/s
+CPU reference time: 531.7030 ms
+Timing note: GPU time is kernel-only; CPU time is host simulation.
+Per-game results written to: results/tournament_results.csv
+
+Execution evidence saved in:
+  results/tournament.log
+  results/tournament_results.csv
+run_demo exit code: 0
+
+################ BATCH SIZE SWEEP: 1024 games, 5 iterations ################
+CUDA Arena: massively parallel Tic-Tac-Toe tournament
+GPU: NVIDIA GeForce RTX 3050 Laptop GPU
+Games per execution: 1024
+Timing iterations: 5
+Base seed: 2026
+Execution model: one CUDA thread simulates one independent game
+
+========== TOURNAMENT RESULTS ==========
+Agent X wins: 321
+Agent O wins: 0
+Draws: 703
+Average moves per game: 8.3730
+CPU/GPU consistency: PASS (1024 games checked)
+Average GPU kernel time: 0.0137 ms
+GPU throughput: 74.6269 million games/s
+CPU reference time: 0.5527 ms
+Timing note: GPU time is kernel-only; CPU time is host simulation.
+batch 1024 exit code: 0
+
+################ BATCH SIZE SWEEP: 16384 games, 5 iterations ################
+CUDA Arena: massively parallel Tic-Tac-Toe tournament
+GPU: NVIDIA GeForce RTX 3050 Laptop GPU
+Games per execution: 16384
+Timing iterations: 5
+Base seed: 2026
+Execution model: one CUDA thread simulates one independent game
+
+========== TOURNAMENT RESULTS ==========
+Agent X wins: 5252
+Agent O wins: 0
+Draws: 11132
+Average moves per game: 8.3589
+CPU/GPU consistency: PASS (16384 games checked)
+Average GPU kernel time: 0.0317 ms
+GPU throughput: 516.6499 million games/s
+CPU reference time: 8.2509 ms
+Timing note: GPU time is kernel-only; CPU time is host simulation.
+batch 16384 exit code: 0
+
+################ BATCH SIZE SWEEP: 262144 games, 5 iterations ################
+CUDA Arena: massively parallel Tic-Tac-Toe tournament
+GPU: NVIDIA GeForce RTX 3050 Laptop GPU
+Games per execution: 262144
+Timing iterations: 5
+Base seed: 2026
+Execution model: one CUDA thread simulates one independent game
+
+========== TOURNAMENT RESULTS ==========
+Agent X wins: 84792
+Agent O wins: 0
+Draws: 177352
+Average moves per game: 8.3531
+CPU/GPU consistency: PASS (262144 games checked)
+Average GPU kernel time: 0.3948 ms
+GPU throughput: 663.9865 million games/s
+CPU reference time: 127.9010 ms
+Timing note: GPU time is kernel-only; CPU time is host simulation.
+batch 262144 exit code: 0
+
+################ SESSION COMPLETE ################
+Finished (UTC): 2026-11-26 18:50:22

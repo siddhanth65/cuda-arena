@@ -1,3 +1,5 @@
-cuda_arena
-results/*.log
+# Build outputs
+cuda_tournament
+cuda_arena_duel
 *.o
+presentation/build/

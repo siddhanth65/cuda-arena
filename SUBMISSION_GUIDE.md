@@ -10,8 +10,8 @@ https://github.com/siddhanth65/cuda-arena
 
 ## Proof of execution
 After running the CUDA build on an NVIDIA GPU, create a ZIP containing:
-- \`results/tournament.log\`
-- \`results/tournament_results.csv\`
+- `results/tournament.log`
+- `results/tournament_results.csv`
 - a terminal screenshot showing the GPU name and successful run
 
 Do not upload illustrative browser screenshots or sample outputs as proof of CUDA execution.

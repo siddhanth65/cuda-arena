@@ -1,0 +1,22 @@
+$ nvidia-smi --query-gpu=name,driver_version,memory.total,compute_cap --format=csv
+name, driver_version, memory.total [MiB], compute_cap
+NVIDIA GeForce RTX 3050 Laptop GPU, 621.14, 4096 MiB, 8.6
+
+$ ./cuda_tournament --games 1048576 --iterations 5 --seed 2026 --no-csv
+CUDA Arena: massively parallel Tic-Tac-Toe tournament
+GPU: NVIDIA GeForce RTX 3050 Laptop GPU
+Games per execution: 1048576
+Timing iterations: 5
+Base seed: 2026
+Execution model: one CUDA thread simulates one independent game
+
+========== TOURNAMENT RESULTS ==========
+Agent X wins: 339530
+Agent O wins: 0
+Draws: 709046
+Average moves per game: 8.3524
+CPU/GPU consistency: PASS (1048576 games checked)
+Average GPU kernel time: 1.5473 ms
+GPU throughput: 677.6997 million games/s
+CPU reference time: 617.8481 ms
+Timing note: GPU time is kernel-only; CPU time is host simulation.
