@@ -42,7 +42,7 @@ struct Options {
     }                                                                          \
   } while (0)
 
-__host__ __device__ std::uint32_t MixBits(std::uint32_t value) {
+__host__ __device__ std::uint32_t mix_bits(std::uint32_t value) {
   value ^= value >> 16;
   value *= 0x7feb352dU;
   value ^= value >> 15;
@@ -51,7 +51,7 @@ __host__ __device__ std::uint32_t MixBits(std::uint32_t value) {
   return value;
 }
 
-__host__ __device__ bool IsWinningMove(const int* board, int cell,
+__host__ __device__ bool is_winning_move(const int* board, int cell,
                                        int player) {
   if (board[cell] != kEmpty) return false;
   const int row = cell / 3;
@@ -84,7 +84,7 @@ __host__ __device__ bool IsWinningMove(const int* board, int cell,
   return false;
 }
 
-__host__ __device__ bool HasWon(const int* board, int player) {
+__host__ __device__ bool has_won(const int* board, int player) {
   for (int index = 0; index < 3; ++index) {
     if (board[index * 3] == player && board[index * 3 + 1] == player &&
         board[index * 3 + 2] == player) return true;
@@ -95,15 +95,15 @@ __host__ __device__ bool HasWon(const int* board, int player) {
          (board[2] == player && board[4] == player && board[6] == player);
 }
 
-__host__ __device__ int ScoreMove(const int* board, int cell, int player,
+__host__ __device__ int score_move(const int* board, int cell, int player,
                                   int turn, std::uint32_t game_id,
                                   std::uint32_t seed) {
   if (board[cell] != kEmpty) return -1000000;
   const int opponent = (player == kX) ? kO : kX;
   const int strategy = (player == kX) ? 0 : 1;
   int score = 0;
-  if (IsWinningMove(board, cell, player)) score += 10000;
-  if (IsWinningMove(board, cell, opponent)) {
+  if (is_winning_move(board, cell, player)) score += 10000;
+  if (is_winning_move(board, cell, opponent)) {
     score += (strategy == 1) ? 9500 : 8000;
   }
   if (cell == 4) score += (strategy == 0) ? 450 : 600;
@@ -115,11 +115,11 @@ __host__ __device__ int ScoreMove(const int* board, int cell, int player,
       seed ^ (game_id * 0x9e3779b9U) ^
       (static_cast<std::uint32_t>(turn) * 0x85ebca6bU) ^
       (static_cast<std::uint32_t>(cell) * 0xc2b2ae35U);
-  score += static_cast<int>(MixBits(random_key) & 7U);
+  score += static_cast<int>(mix_bits(random_key) & 7U);
   return score;
 }
 
-__host__ __device__ GameResult SimulateOneGame(std::uint32_t game_id,
+__host__ __device__ GameResult simulate_one_game(std::uint32_t game_id,
                                                 std::uint32_t seed) {
   int board[kBoardCells] = {kEmpty, kEmpty, kEmpty, kEmpty, kEmpty,
                             kEmpty, kEmpty, kEmpty, kEmpty};
@@ -128,7 +128,7 @@ __host__ __device__ GameResult SimulateOneGame(std::uint32_t game_id,
     int best_cell = -1;
     int best_score = -1000001;
     for (int cell = 0; cell < kBoardCells; ++cell) {
-      const int score = ScoreMove(board, cell, player, turn, game_id, seed);
+      const int score = score_move(board, cell, player, turn, game_id, seed);
       if (score > best_score) {
         best_score = score;
         best_cell = cell;
@@ -136,24 +136,24 @@ __host__ __device__ GameResult SimulateOneGame(std::uint32_t game_id,
     }
     if (best_cell < 0) return {kEmpty, turn};
     board[best_cell] = player;
-    if (HasWon(board, player)) return {player, turn + 1};
+    if (has_won(board, player)) return {player, turn + 1};
     if (turn == kBoardCells - 1) return {kEmpty, kBoardCells};
     player = (player == kX) ? kO : kX;
   }
   return {kEmpty, kBoardCells};
 }
 
-__global__ void SimulateTournamentKernel(int num_games, std::uint32_t seed,
+__global__ void simulate_tournament_kernel(int num_games, std::uint32_t seed,
                                          int* results) {
   const int game_id = blockIdx.x * blockDim.x + threadIdx.x;
   if (game_id >= num_games) return;
   const GameResult result =
-      SimulateOneGame(static_cast<std::uint32_t>(game_id), seed);
+      simulate_one_game(static_cast<std::uint32_t>(game_id), seed);
   results[2ULL * static_cast<unsigned int>(game_id)] = result.winner;
   results[2ULL * static_cast<unsigned int>(game_id) + 1ULL] = result.moves;
 }
 
-bool ParseUnsigned(const std::string& text, unsigned long long max_value,
+bool parse_unsigned(const std::string& text, unsigned long long max_value,
                    unsigned long long* value) {
   errno = 0;
   char* end = nullptr;
@@ -164,7 +164,7 @@ bool ParseUnsigned(const std::string& text, unsigned long long max_value,
   return true;
 }
 
-bool ParseOptions(int argc, char** argv, Options* options) {
+bool parse_options(int argc, char** argv, Options* options) {
   for (int index = 1; index < argc; ++index) {
     const std::string argument(argv[index]);
     if (argument == "--help") {
@@ -189,19 +189,19 @@ bool ParseOptions(int argc, char** argv, Options* options) {
     const std::string value(argv[++index]);
     unsigned long long parsed = 0;
     if (argument == "--games") {
-      if (!ParseUnsigned(value, kMaxGames, &parsed) || parsed < 1) {
+      if (!parse_unsigned(value, kMaxGames, &parsed) || parsed < 1) {
         std::cerr << "Invalid --games value: " << value << '\n';
         return false;
       }
       options->games = static_cast<int>(parsed);
     } else if (argument == "--iterations") {
-      if (!ParseUnsigned(value, kMaxIterations, &parsed) || parsed < 1) {
+      if (!parse_unsigned(value, kMaxIterations, &parsed) || parsed < 1) {
         std::cerr << "Invalid --iterations value: " << value << '\n';
         return false;
       }
       options->iterations = static_cast<int>(parsed);
     } else if (argument == "--seed") {
-      if (!ParseUnsigned(value, 0xffffffffULL, &parsed)) {
+      if (!parse_unsigned(value, 0xffffffffULL, &parsed)) {
         std::cerr << "Invalid --seed value: " << value << '\n';
         return false;
       }
@@ -216,13 +216,13 @@ bool ParseOptions(int argc, char** argv, Options* options) {
   return true;
 }
 
-const char* WinnerName(int winner) {
+const char* winner_name(int winner) {
   if (winner == kX) return "X";
   if (winner == kO) return "O";
   return "DRAW";
 }
 
-bool WriteCsv(const Options& options, std::uint32_t final_seed,
+bool write_csv(const Options& options, std::uint32_t final_seed,
               const std::vector<int>& results) {
   if (options.csv_path.empty()) return true;
   const std::filesystem::path output_path(options.csv_path);
@@ -242,7 +242,7 @@ bool WriteCsv(const Options& options, std::uint32_t final_seed,
   }
   output << "game_id,winner,moves,seed\n";
   for (int game = 0; game < options.games; ++game) {
-    output << game << ',' << WinnerName(results[2ULL * game]) << ','
+    output << game << ',' << winner_name(results[2ULL * game]) << ','
            << results[2ULL * game + 1ULL] << ',' << final_seed << '\n';
   }
   if (!output.good()) {
@@ -255,7 +255,7 @@ bool WriteCsv(const Options& options, std::uint32_t final_seed,
 
 int main(int argc, char** argv) {
   Options options;
-  if (!ParseOptions(argc, argv, &options)) {
+  if (!parse_options(argc, argv, &options)) {
     return (argc > 1 && std::string(argv[1]) == "--help") ? EXIT_SUCCESS
                                                           : EXIT_FAILURE;
   }
@@ -286,7 +286,7 @@ int main(int argc, char** argv) {
   constexpr int kThreadsPerBlock = 256;
   const int blocks =
       (options.games + kThreadsPerBlock - 1) / kThreadsPerBlock;
-  SimulateTournamentKernel<<<blocks, kThreadsPerBlock>>>(
+  simulate_tournament_kernel<<<blocks, kThreadsPerBlock>>>(
       options.games, options.seed, device_results);
   CUDA_CHECK(cudaGetLastError());
   CUDA_CHECK(cudaDeviceSynchronize());
@@ -301,7 +301,7 @@ int main(int argc, char** argv) {
   for (int iteration = 0; iteration < options.iterations; ++iteration) {
     final_seed = options.seed + static_cast<std::uint32_t>(iteration);
     CUDA_CHECK(cudaEventRecord(start_event));
-    SimulateTournamentKernel<<<blocks, kThreadsPerBlock>>>(
+    simulate_tournament_kernel<<<blocks, kThreadsPerBlock>>>(
         options.games, final_seed, device_results);
     CUDA_CHECK(cudaGetLastError());
     CUDA_CHECK(cudaEventRecord(stop_event));
@@ -321,7 +321,7 @@ int main(int argc, char** argv) {
   const auto cpu_start = std::chrono::steady_clock::now();
   for (int game = 0; game < options.games; ++game) {
     const GameResult result =
-        SimulateOneGame(static_cast<std::uint32_t>(game), final_seed);
+        simulate_one_game(static_cast<std::uint32_t>(game), final_seed);
     cpu_results[2ULL * game] = result.winner;
     cpu_results[2ULL * game + 1ULL] = result.moves;
   }
@@ -384,7 +384,7 @@ int main(int argc, char** argv) {
             << "CPU reference time: " << cpu_ms << " ms\n"
             << "Timing note: GPU time is kernel-only; CPU time is host simulation.\n";
 
-  const bool csv_written = WriteCsv(options, final_seed, gpu_results);
+  const bool csv_written = write_csv(options, final_seed, gpu_results);
   CUDA_CHECK(cudaEventDestroy(start_event));
   CUDA_CHECK(cudaEventDestroy(stop_event));
   CUDA_CHECK(cudaFree(device_results));
